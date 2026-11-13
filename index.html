@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SNAP TV - LIVE | Youth Soccer Academy</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0a0f1e;color:#fff;font-family:'Segoe UI',sans-serif}
+    .header{background:#070b1a;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #1a2340;position:sticky;top:0;z-index:99;flex-wrap:wrap;gap:10px}
+    .logo{font-size:28px;font-weight:900}
+    .logo span{color:#22c55e}
+    .live{background:#ff0000;padding:4px 12px;border-radius:20px;font-size:12px;animation:blink 1s infinite}
+    @keyframes blink{50%{opacity:.5}}
+    .nav a{color:#8a94b5;text-decoration:none;margin:0 10px;cursor:pointer}
+    .nav a.active{color:#22c55e;border-bottom:2px solid #22c55e}
+    .page{display:none;padding:20px;max-width:1600px;margin:auto}
+    .page.active{display:block}
+    .main{display:grid;grid-template-columns:1fr 340px;gap:16px}
+    .panel{background:#121a33;border-radius:14px;padding:14px;border:1px solid #1f2a4a}
+    .video-wrap{background:#000;border-radius:14px;overflow:hidden;border:1px solid #1f2a4a;position:relative;aspect-ratio:16/9}
+    .video-wrap iframe{width:100%;height:100%;display:block;border:0}
+    .video-wrap video{width:100%;height:100%;display:block;background:#000}
+    .scorebar{background:#121a33;padding:14px 20px;border-radius:14px;display:flex;justify-content:space-between;align-items:center;border:1px solid #1f2a4a;margin:16px 0;flex-wrap:wrap;gap:10px}
+    .chat-msg{background:#1b2442;padding:8px;border-radius:8px;margin-bottom:8px;font-size:13px;word-break:break-word}
+    .chat-msg b{color:#22c55e}
+    .input{width:100%;padding:12px;border-radius:8px;border:1px solid #2a3a6a;background:#0a0f1e;color:#fff;margin-top:8px}
+    .btn{padding:10px 16px;background:#22c55e;color:#000;border:none;border-radius:8px;font-weight:800;cursor:pointer}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{padding:12px;border:1px solid #1f2a4a;text-align:left}
+    th{background:#1b2442;color:#22c55e}
+    .offline-box{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px;background:#000}
+    .remote{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:12px 0}
+    .remote button{background:#1b2442;color:#fff;border:1px solid #2a3a6a;padding:12px 16px;border-radius:50px;font-weight:800;cursor:pointer;font-size:14px}
+    .remote button.main{background:#22c55e;color:#000}
+    .ch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px}
+    .ch{background:#121a33;border:1px solid #1f2a4a;border-radius:12px;padding:10px;text-align:center;cursor:pointer}
+    .ch img{width:100%;height:80px;object-fit:cover;border-radius:8px}
+    .ch.active{outline:2px solid #22c55e}
+    @media(max-width:900px){.main{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">⚽ SNAP <span>TV</span> <span class="live">● LIVE</span></div>
+    <div class="nav">
+      <a onclick="showPage('home')" id="link-home" class="active">Live</a>
+      <a onclick="showPage('channels')" id="link-channels">Channels</a>
+      <a onclick="showPage('matches')" id="link-matches">Matches</a>
+      <a onclick="showPage('players')" id="link-players">Players</a>
+      <a onclick="showPage('shop')" id="link-shop">Shop</a>
+      <a onclick="showPage('contact')" id="link-contact">Contact</a>
+    </div>
+    <div>👁️ <span id="viewCount">--</span> viewers</div>
+  </div>
+
+  <div id="home" class="page active">
+    <div class="scorebar">
+      <div style="font-weight:900;font-size:24px">🟢 <span id="scoreText">SNAP 0 - 0 OPP</span> 🔵</div>
+      <div style="background:#22c55e;color:#000;padding:6px 14px;border-radius:20px;font-weight:800" id="timer">NOT LIVE YET</div>
+    </div>
+    <div class="main">
+      <div>
+      <div class="video-wrap" id="videoWrap">
+        <div style="position:absolute;top:10px;left:10px;background:rgba(0,0,0,.7);padding:6px 12px;border-radius:20px;font-size:12px;z-index:2">🔴 LIVE • HD • FROM SNAP TV CONTROL ROOM</div>
+        <div id="offlineBox" class="offline-box">
+          <h2 style="font-size:40px">⚽</h2>
+          <h3>SNAP TV is getting ready</h3>
+          <p style="color:#8a94b5;margin:10px 0">Next match starts soon. Stay here, video will appear automatically when we go live.</p>
+        </div>
+        <iframe id="liveFrame" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="display:none"></iframe>
+        <video id="m3u8Player" controls autoplay playsinline style="display:none"></video>
+      </div>
+      <!-- VIEWER REMOTE - ADDED -->
+      <div class="remote">
+        <button onclick="prevCh()">⏮ PREV</button>
+        <button class="main" onclick="togglePlay()" id="playBtn">⏸ PAUSE</button>
+        <button onclick="nextCh()">NEXT ⏭</button>
+      </div>
+      <div class="remote">
+        <button onclick="goFull()">⛶ FULLSCREEN</button>
+        <button onclick="goRotate()">🔄 ROTATE</button>
+        <button onclick="toggleMute()" id="muteBtn">🔊 SOUND ON</button>
+        <button onclick="location.reload()">🔄 REFRESH</button>
+      </div>
+      </div>
+      <div class="panel" style="display:flex;flex-direction:column;height:560px">
+        <h4 style="color:#22c55e">LIVE CHAT</h4>
+        <p style="font-size:11px;color:#8a94b5">Chat is local demo. Real chat is on YouTube.</p>
+        <div id="chatBox" style="flex:1;overflow-y:auto;margin-top:10px">
+          <div class="chat-msg"><b>Coach:</b> Pressing high!</div>
+          <div class="chat-msg"><b>SNAP TV:</b> Welcome to SNAP TV! Drop your score prediction.</div>
+        </div>
+        <input id="chatInput" class="input" placeholder="Chat (3 sec limit)" maxlength="100" autocomplete="off" onkeypress="if(event.key==='Enter')sendChat()">
+        <a id="ytChatLink" href="#" target="_blank" class="btn" style="text-align:center;text-decoration:none;margin-top:10px;display:block">Open YouTube Live Chat</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="channels" class="page"><h1>📺 All Channels</h1><p style="color:#8a94b5">Added from Admin - tap to watch on Live page</p><div id="chGrid" class="ch-grid"></div></div>
+  <div id="matches" class="page"><h1>📅 Matches</h1><table><tr><th>Date</th><th>Match</th><th>Venue</th><th>Ticket</th></tr><tr><td>Oct 5</td><td>SNAP vs Riverside FC</td><td>SNAP Field</td><td>10k UGX</td></tr><tr><td>Oct 9</td><td>SNAP vs City Strikers</td><td>Away</td><td>15k UGX</td></tr></table></div>
+  <div id="players" class="page"><h1>⚽ Squad</h1><table><tr><th>#</th><th>Name</th><th>Position</th><th>Goals</th></tr><tr><td>10</td><td>John Mwangi</td><td>Midfielder</td><td>5</td></tr><tr><td>9</td><td>Alice Kamya</td><td>Forward</td><td>8</td></tr></table></div>
+  <div id="shop" class="page"><h1>💰 Shop</h1><p>WhatsApp orders only - no card data stored.</p><p style="margin-top:10px">Jersey - 50k UGX<br>Scarf - 20k UGX<br>Cap - 25k UGX</p></div>
+  <div id="contact" class="page"><h1>📢 Contact</h1><p>WhatsApp: +256 700 000000</p><p>Email: info@snapsoccer.com</p></div>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+  const YOUTUBE_LIVE_ID = "";
+  const OPPONENT_NAME = "OPP";
+  const params = new URLSearchParams(location.search);
+  const snapScore = params.get('snap') || '0';
+  const oppScore = params.get('opp') || '0';
+  document.getElementById('scoreText').textContent = 'SNAP ' + snapScore + ' - ' + oppScore + ' ' + OPPONENT_NAME;
+
+  // Firebase - your channels
+  const firebaseConfig={apiKey:"AIzaSyCBTqxhZECP0UK_6biNDowgtVU-o_bRVSM",authDomain:"snaptv-com.firebaseapp.com",databaseURL:"https://snaptv-com-default-rtdb.firebaseio.com",projectId:"snaptv-com",storageBucket:"snaptv-com.firebasestorage.app",messagingSenderId:"627489010877",appId:"1:627489010877:web:96944b948d7a0298b8f3d4"};
+  firebase.initializeApp(firebaseConfig);
+  let channels=[],currentIndex=-1;
+  const video=document.getElementById('m3u8Player');
+  const frame=document.getElementById('liveFrame');
+
+  if(YOUTUBE_LIVE_ID){
+    document.getElementById('offlineBox').style.display='none';
+    frame.style.display='block';
+    frame.src='https://www.youtube.com/embed/' + YOUTUBE_LIVE_ID + '?autoplay=1&mute=1';
+    document.getElementById('ytChatLink').href='https://www.youtube.com/watch?v=' + YOUTUBE_LIVE_ID;
+    document.getElementById('viewCount').textContent='LIVE';
+    document.getElementById('timer').textContent='LIVE NOW';
+  } else { document.getElementById('viewCount').textContent='0'; }
+
+  function showPage(id){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.nav a').forEach(a=>a.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.getElementById('link-'+id).classList.add('active');
+  }
+  function goFull(){let el=document.getElementById('videoWrap'); if(el.requestFullscreen)el.requestFullscreen(); else if(frame.requestFullscreen)frame.requestFullscreen(); try{screen.orientation.lock('landscape');}catch(e){}}
+  function goRotate(){ goFull(); }
+  function togglePlay(){ if(video.style.display!=='none'){ if(video.paused){video.play();document.getElementById('playBtn').innerText='⏸ PAUSE';} else {video.pause();document.getElementById('playBtn').innerText='▶ PLAY';} } else { alert('YouTube controls are inside the video - tap video to pause'); } }
+  function toggleMute(){ video.muted=!video.muted; document.getElementById('muteBtn').innerText=video.muted?'🔇 MUTED':'🔊 SOUND ON'; }
+  function playChannel(i){
+    if(i<0) i=channels.length-1; if(i>=channels.length) i=0; currentIndex=i; let c=channels[i];
+    showPage('home');
+    document.getElementById('offlineBox').style.display='none';
+    frame.style.display='none'; video.style.display='block';
+    document.getElementById('scoreText').textContent=c.name;
+    document.getElementById('timer').textContent='LIVE NOW';
+    if(Hls.isSupported() && c.url.includes('.m3u8')){ if(window.hls)window.hls.destroy(); window.hls=new Hls(); window.hls.loadSource(c.url); window.hls.attachMedia(video); } else { video.src=c.url; }
+    video.play();
+  }
+  function nextCh(){ if(channels.length) playChannel(currentIndex+1); else alert('No channels in Admin yet'); }
+  function prevCh(){ if(channels.length) playChannel(currentIndex-1); else alert('No channels in Admin yet'); }
+
+  firebase.database().ref("channels").on("value", s=>{
+    const d=s.val()||{}; channels=Object.values(d);
+    let h=""; channels.forEach((c,idx)=>{ h+=`<div class="ch" onclick="playChannel(${idx})"><img src="${c.logo||'https://via.placeholder.com/300x150?text=SNAP+TV'}"><b>${c.name}</b><br><small>${c.cat}</small></div>` });
+    document.getElementById('chGrid').innerHTML=h||"<p>No channels yet - add in Admin</p>";
+  });
+
+  let lastChat=0;
+  function sendChat(){
+    const now=Date.now(); if(now-lastChat<3000){alert('Wait 3 sec');return;}
+    const input=document.getElementById('chatInput'); const raw=input.value.trim(); if(!raw) return; lastChat=now;
+    const box=document.getElementById('chatBox'); const div=document.createElement('div'); div.className='chat-msg';
+    const b=document.createElement('b'); b.textContent='You: '; const span=document.createElement('span'); span.textContent=raw.slice(0,100);
+    div.appendChild(b); div.appendChild(span); box.appendChild(div); input.value=''; box.scrollTop=box.scrollHeight;
+  }
+</script>
+</body>
+  </html>￼Enter
